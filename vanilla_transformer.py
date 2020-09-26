@@ -7,7 +7,8 @@ import torch.nn as nn
 from tqdm import tqdm
 from transformers import AdamW
 from transformers import get_linear_schedule_with_warmup
-from sklearn.metrics import roc_auc_score, f1_score, accuracy_score
+from sklearn.metrics import roc_auc_score, f1_score, accuracy_score, precision_score, recall_score
+from tqdm import tqdm
 
 import config, dataset, model
 
@@ -72,13 +73,15 @@ def test(net, test_loader, device='cpu', pred_save_fname=False):
         auc = safe_calc_auc(all_trues, all_preds)
         f1 = f1_score(all_trues, all_preds)
         acc = accuracy_score(all_trues, all_preds)
+        p = precision_score(all_trues, all_preds)
+        r = recall_score(all_trues, all_preds)
         if pred_save_fname:
             with open(pred_save_fname,'w') as fh:
                 for i in all_preds:
                     print(i,file=fh)
             print(f'Predictions are saved to file: {pred_save_fname}')
 
-    return acc, f1, auc
+    return acc, auc, p, r, f1
 
 
 def train_model(net, criterion, optimizer, scheduler, train_loader, test_loader=None,
@@ -126,8 +129,9 @@ def train_model(net, criterion, optimizer, scheduler, train_loader, test_loader=
                 pred_save_fname = config.PREDICTIONS_FNAME.replace('.txt', f'_{e}.txt')
             else:
                 pred_save_fname = None
-            acc, f1, auc = test(net, test_loader, device=device, pred_save_fname=pred_save_fname)
-            print(f'After epoch: {e}, validation ACC : {acc:.4f}, F1: {f1:.4f} and AUC:{auc:.4f}')
+            acc, auc, p, r, f1 = test(net, test_loader, device=device, pred_save_fname=pred_save_fname)
+            print(f'After epoch: {e}, validation ACC: {acc:.4f} and AUC: {auc:.4f},'
+          f'P: {p:.4f}, R: {r:.4f}, F1: {f1:.4f}')
 
         if save_model:
             if e%save_every==0:
@@ -164,11 +168,13 @@ def main():
 
     #creating dataloader
     #Training set should be shuffled
-    train_loader = DataLoader(train_set, shuffle = True,
+    train_loader = DataLoader(train_set,
+                              shuffle = True,
                               batch_size=config.BATCH_SIZE,
                               num_workers=config.NUM_CPU_WORKERS)
     #Validation set should NOT be shuffled
-    test_loader = DataLoader(valid_set, shuffle = False,
+    test_loader = DataLoader(valid_set,
+                             shuffle = False,
                              batch_size=config.BATCH_SIZE,
                              num_workers=config.NUM_CPU_WORKERS)
 
@@ -217,9 +223,9 @@ def main():
                 print_every=config.PRINT_EVERY, n_epochs=config.NUM_EPOCHS, device=device,
                 save_model=True, save_every = config.SAVE_EVERY)
 
-    acc, f1, auc = test(bert_model, test_loader, device=device, pred_save_fname=True)
-    print(f'After ALL epochs: validation ACC : {acc:.4f}, F1: {f1:.4f} and AUC:{auc:.4f}'
-          f'')
+    acc, auc, p, r, f1 = test(bert_model, test_loader, device=device, pred_save_fname=True)
+    print(f'After ALL epochs: validation ACC: {acc:.4f} and AUC: {auc:.4f},'
+          f'P: {p:.4f}, R: {r:.4f}, F1: {f1:.4f}')
 
 
 if __name__ == '__main__':

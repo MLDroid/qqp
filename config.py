@@ -7,7 +7,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 MODEL_NAME =  'distilbert-base-uncased'#, 'bert-base-uncased', 'roberta-base', 'albert-base-v2'
 MODEL_NAME =  'sentence-transformers/distilbert-base-nli-stsb-mean-tokens'
-BATCH_SIZE = 30
+MODEL_NAME = sys.argv[1]
+BATCH_SIZE = int(sys.argv[2])
 LR = 0.00001
 
 data_folder = './data'

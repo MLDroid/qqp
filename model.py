@@ -27,6 +27,15 @@ class bert_classifier(nn.Module):
         #non linear functions
         self.relu = nn.ReLU()
 
+        # self.init_weights()
+
+
+    # def init_weights(self):
+    #     print('inited with xavier init')
+    #     self.initrange = 0.05
+    #     self.fc1.weight.data.uniform_(-self.initrange, self.initrange)
+    #     self.fc2.weight.data.uniform_(-self.initrange, self.initrange)
+
 
     def forward(self, seq, attn_masks):
         '''
