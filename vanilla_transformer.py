@@ -44,7 +44,9 @@ def get_metrics_from_logits(logits, labels):
     auc = safe_calc_auc(all_trues, all_preds)
     f1 = f1_score(all_trues, all_preds)
     acc = accuracy_score(all_trues, all_preds)
-    return acc, f1, auc
+    p = precision_score(all_trues, all_preds)
+    r = recall_score(all_trues, all_preds)
+    return acc, auc, p, r, f1
 
 
 def safe_calc_auc(trues, preds):
@@ -116,9 +118,10 @@ def train_model(net, criterion, optimizer, scheduler, train_loader, test_loader=
             scheduler.step()
 
             if batch_num % print_every == 0:
-                acc, f1, auc = get_metrics_from_logits(logits, labels)
+                acc, auc, p, r, f1 = get_metrics_from_logits(logits, labels)
                 print(f"batch {batch_num} of epoch {e} complete. Loss : {loss.item()} "
-                      f"ACC : {acc:.4f}, F1: {f1:.4f} and AUC:{auc:.4f}")
+                      f"ACC: {acc:.4f} and AUC: {auc:.4f}, P: {p:.4f}, R: {r:.4f}, "
+                      f"F1: {f1:.4f}")
 
         t = time.perf_counter() - t0
         t = t/60 # mins
